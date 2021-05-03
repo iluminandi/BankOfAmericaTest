@@ -6,53 +6,54 @@
     }
   },
   "Resources": {
-    "RootRole": {
-      "Type": "AWS::IAM::Role",
+    "SpringBootApplication": {
+      "Type": "AWS::ElasticBeanstalk::Application",
       "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version" : "2012-10-17",
-          "Statement": [ {
-            "Effect": "Allow",
-            "Principal": {
-              "Service": [ "ec2.amazonaws.com" ]
-            },
-            "Action": [ "sts:AssumeRole" ]
-          } ]
-        },
-        "Path": "/",
-        "Policies": [ {
-          "PolicyName": "root",
-          "PolicyDocument": {
-            "Version" : "2012-10-17",
-            "Statement": [ {
-              "Effect": "Allow",
-              "Action": [
-                "s3:Get*",
-                "s3:List*"
-              ],
-              "Resource": {"Fn::Join" : [ "", [ "arn:aws:s3:::", {"Ref":"SourceCodeBucket"},"/*"] ] }
-            } ]
+        "Description":"Spring boot and elastic beanstalk"
+      }
+    },
+    "SpringBootApplicationVersion": {
+      "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
+      "Properties": {
+        "ApplicationName":{"Ref":"SpringBootApplication"},
+        "SourceBundle": {
+                  "S3Bucket": {"Ref":"SourceCodeBucket"},
+                  "S3Key": "BankOfAmericaTest-0.0.1-SNAPSHOT.war"
+        }
+      }
+    },
+    "SpringBootBeanStalkConfigurationTemplate": {
+      "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
+      "Properties": {
+        "ApplicationName": {"Ref":"SpringBootApplication"},
+        "Description":"A display of speed boot application",
+        "OptionSettings": [
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MinSize",
+            "Value": "2"
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MaxSize",
+            "Value": "2"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:environment",
+            "OptionName": "EnvironmentType",
+            "Value": "LoadBalanced"
           }
-        } ]
+        ],
+        "SolutionStackName": "64bit Amazon Linux 2016.09 v2.3.0 running Java 8"
       }
     },
-    "RootInstanceProfile": {
-      "Type": "AWS::IAM::InstanceProfile",
+    "SpringBootBeanstalkEnvironment": {
+      "Type": "AWS::ElasticBeanstalk::Environment",
       "Properties": {
-        "Path": "/",
-        "Roles": [ {
-          "Ref": "RootRole"
-        } ]
-      }
-    },
-    "Ec2Instance":{
-      "Type":"AWS::EC2::Instance",
-      "Properties":{
-        "ImageId":"ami-9398d3e0",
-        "InstanceType":"t2.nano",
-        "KeyName":"TestKey",
-        "IamInstanceProfile": {"Ref":"RootInstanceProfile"},
-        "UserData":"IyEvdXNyL2Jpbi9lbnYgYmFzaA0KYXdzIHMzIGNwIHMzOi8ve2J1Y2tldCB3aXRoIGNvZGV9L2VjMi1kZXBsb3ltZW50LTEuMC1TTkFQU0hPVC5qYXIgL2hvbWUvZWMyLXVzZXIvZWMyLWRlcGxveW1lbnQtMS4wLVNOQVBTSE9ULmphcg0Kc3VkbyB5dW0gLXkgaW5zdGFsbCBqYXZhLTEuOC4wDQpzdWRvIHl1bSAteSByZW1vdmUgamF2YS0xLjcuMC1vcGVuamRrDQpjZCAvaG9tZS9lYzItdXNlci8NCnN1ZG8gbm9odXAgamF2YSAtamFyIGVjMi1kZXBsb3ltZW50LTEuMC1TTkFQU0hPVC5qYXIgPiBlYzJkZXAubG9n"
+        "ApplicationName": {"Ref":"BankOfAmericaTest"},
+        "EnvironmentName":"JavaBeanstalkEnvironment",
+        "TemplateName": {"Ref":"SpringBootBeanStalkConfigurationTemplate"},
+        "VersionLabel": {"Ref": "SpringBootApplicationVersion"}
       }
     }
   }
