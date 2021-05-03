@@ -1,0 +1,59 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters" : {
+    "SourceCodeBucket" : {
+      "Type" : "String"
+    }
+  },
+  "Resources": {
+    "RootRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "ec2.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/",
+        "Policies": [ {
+          "PolicyName": "root",
+          "PolicyDocument": {
+            "Version" : "2012-10-17",
+            "Statement": [ {
+              "Effect": "Allow",
+              "Action": [
+                "s3:Get*",
+                "s3:List*"
+              ],
+              "Resource": {"Fn::Join" : [ "", [ "arn:aws:s3:::", {"Ref":"SourceCodeBucket"},"/*"] ] }
+            } ]
+          }
+        } ]
+      }
+    },
+    "RootInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ {
+          "Ref": "RootRole"
+        } ]
+      }
+    },
+    "Ec2Instance":{
+      "Type":"AWS::EC2::Instance",
+      "Properties":{
+        "ImageId":"ami-9398d3e0",
+        "InstanceType":"t2.nano",
+        "KeyName":"TestKey",
+        "IamInstanceProfile": {"Ref":"RootInstanceProfile"},
+        "UserData":"IyEvdXNyL2Jpbi9lbnYgYmFzaA0KYXdzIHMzIGNwIHMzOi8ve2J1Y2tldCB3aXRoIGNvZGV9L2VjMi1kZXBsb3ltZW50LTEuMC1TTkFQU0hPVC5qYXIgL2hvbWUvZWMyLXVzZXIvZWMyLWRlcGxveW1lbnQtMS4wLVNOQVBTSE9ULmphcg0Kc3VkbyB5dW0gLXkgaW5zdGFsbCBqYXZhLTEuOC4wDQpzdWRvIHl1bSAteSByZW1vdmUgamF2YS0xLjcuMC1vcGVuamRrDQpjZCAvaG9tZS9lYzItdXNlci8NCnN1ZG8gbm9odXAgamF2YSAtamFyIGVjMi1kZXBsb3ltZW50LTEuMC1TTkFQU0hPVC5qYXIgPiBlYzJkZXAubG9n"
+      }
+    }
+  }
+}
